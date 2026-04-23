@@ -1,0 +1,7 @@
+pkg-config
+libcairo2-dev
+libgirepository1.0-dev
+libpango1.0-dev
+libgdk-pixbuf-2.0-0
+libffi-dev
+shared-mime-info
