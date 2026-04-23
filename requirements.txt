@@ -12,7 +12,7 @@ python-docx>=1.1.0
 
 # ── PDF generation ────────────────────────────────────────────────────────────
 weasyprint>=60.0          # Primary: HTML → PDF (best quality)
-xhtml2pdf>=0.2.11         # Fallback PDF renderer
+# xhtml2pdf>=0.2.11         # Fallback PDF renderer
 
 # ── Utilities ────────────────────────────────────────────────────────────────
 python-dateutil>=2.9.0
