@@ -20,9 +20,6 @@ def render_resume_editor(resume: ResumeData) -> ResumeData:
     Renders form fields pre-populated with `resume` data.
     Returns a new ResumeData populated from the edited values.
     """
-    st.markdown("### ✏️ Edit Your Resume")
-    st.caption("All fields are editable. Changes are reflected instantly in the preview.")
-
     # ── Contact Info ──────────────────────────────────────────────────────────
     _section_header("👤", "Contact Information")
     col1, col2 = st.columns(2)

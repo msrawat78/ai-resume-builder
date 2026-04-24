@@ -59,12 +59,12 @@ def render_resume_form() -> ResumeData | None:
     with c1:
         name = st.text_input(
             "Full Name *",
-            placeholder="Manvirender Singh Rawat",
+            placeholder="Alex Carter",
             key="frm_name",
         )
         email = st.text_input(
             "Email *",
-            placeholder="you@example.com",
+            placeholder="alex.carter@example.com",
             key="frm_email",
         )
         _, email_msg = validate_email(st.session_state.get("frm_email", ""))
@@ -74,7 +74,7 @@ def render_resume_form() -> ResumeData | None:
     with c2:
         phone = st.text_input(
             "Phone",
-            placeholder="+91 98765 43210",
+            placeholder="+1 555 010 2020",
             key="frm_phone",
         )
         _, phone_msg = validate_phone(st.session_state.get("frm_phone", ""))
@@ -83,7 +83,7 @@ def render_resume_form() -> ResumeData | None:
 
         location = st.text_input(
             "Location",
-            placeholder="Mumbai / Remote / Hybrid",
+            placeholder="Bengaluru, India",
             key="frm_location",
         )
 
@@ -91,13 +91,13 @@ def render_resume_form() -> ResumeData | None:
     with c3:
         linkedin = st.text_input(
             "LinkedIn URL",
-            placeholder="linkedin.com/in/your-name",
+            placeholder="linkedin.com/in/alex-carter",
             key="frm_linkedin",
         )
     with c4:
         website = st.text_input(
             "Website / Portfolio",
-            placeholder="www.yoursite.com",
+            placeholder="alexcarter.dev",
             key="frm_website",
         )
 
@@ -110,8 +110,9 @@ def render_resume_form() -> ResumeData | None:
         "Summary",
         height=130,
         placeholder=(
-            "Data and AI leader with 18+ years of experience driving analytics "
-            "strategy and enterprise-wide digital transformation…"
+            "Software engineer with 6 years of experience building scalable web "
+            "applications and data pipelines. Strong background in Python, cloud "
+            "infrastructure, and cross-functional team collaboration."
         ),
         key="frm_summary",
         label_visibility="collapsed",
@@ -126,7 +127,7 @@ def render_resume_form() -> ResumeData | None:
     skills_raw = st.text_area(
         "Skills",
         height=110,
-        placeholder="Python\nMachine Learning\nPower BI\nAWS\nTeam Leadership",
+        placeholder="Python\nJavaScript\nReact\nPostgreSQL\nAWS\nDocker",
         key="frm_skills",
         label_visibility="collapsed",
     )
@@ -158,18 +159,18 @@ def render_resume_form() -> ResumeData | None:
             with ca:
                 st.text_input(
                     "Job Title *",
-                    placeholder="Head of Data Analytics",
+                    placeholder="Senior Software Engineer",
                     key=f"frm_exp_title_{i}",
                 )
                 st.text_input(
                     "Company *",
-                    placeholder="Acme Corp",
+                    placeholder="Acme Solutions",
                     key=f"frm_exp_company_{i}",
                 )
             with cb:
                 st.text_input(
                     "Location",
-                    placeholder="Mumbai / Remote",
+                    placeholder="Bengaluru / Remote",
                     key=f"frm_exp_loc_{i}",
                 )
                 cs, ce = st.columns(2)
@@ -190,9 +191,9 @@ def render_resume_form() -> ResumeData | None:
                 "Key achievements — one bullet per line",
                 height=120,
                 placeholder=(
-                    "Led end-to-end data analytics function across 3 regions\n"
-                    "Reduced reporting time by 40% via automated pipelines\n"
-                    "Managed cross-functional team of 8 engineers"
+                    "Built real-time dashboard serving 50,000+ daily active users\n"
+                    "Reduced API response time by 35% via caching and query optimization\n"
+                    "Mentored team of 4 engineers and led weekly code reviews"
                 ),
                 key=f"frm_exp_bullets_{i}",
             )
@@ -251,18 +252,18 @@ def render_resume_form() -> ResumeData | None:
             with ca:
                 st.text_input(
                     "Degree *",
-                    placeholder="B.Tech. / MBA / PGDM",
+                    placeholder="B.E. / B.Tech. / M.S.",
                     key=f"frm_edu_deg_{i}",
                 )
                 st.text_input(
                     "Field of Study",
-                    placeholder="Computer Science / Finance",
+                    placeholder="Computer Science / Information Systems",
                     key=f"frm_edu_field_{i}",
                 )
             with cb:
                 st.text_input(
                     "Institution *",
-                    placeholder="IIT Delhi / Symbiosis Pune",
+                    placeholder="PES University / BITS Pilani",
                     key=f"frm_edu_inst_{i}",
                 )
                 st.text_input(
@@ -303,7 +304,7 @@ def render_resume_form() -> ResumeData | None:
         certs_raw = st.text_area(
             "Certifications (one per line)",
             height=100,
-            placeholder="AWS Solutions Architect\nGoogle Data Analytics\nPMP",
+            placeholder="AWS Solutions Architect – Associate\nGoogle Professional Data Engineer",
             key="frm_certs",
         )
         certs = [c.strip() for c in certs_raw.splitlines() if c.strip()]
@@ -311,7 +312,7 @@ def render_resume_form() -> ResumeData | None:
         langs_raw = st.text_area(
             "Languages (one per line)",
             height=100,
-            placeholder="English\nHindi\nFrench",
+            placeholder="English\nHindi\nKannada",
             key="frm_langs",
         )
         langs = [l.strip() for l in langs_raw.splitlines() if l.strip()]
@@ -323,7 +324,7 @@ def render_resume_form() -> ResumeData | None:
     name_val  = st.session_state.get("frm_name",  "").strip()
     email_val = st.session_state.get("frm_email", "").strip()
 
-    col_btn, col_hint = st.columns([1, 3])
+    _, col_btn = st.columns([3, 1])
     with col_btn:
         submitted = st.button(
             "Next",

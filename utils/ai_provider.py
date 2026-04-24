@@ -188,13 +188,12 @@ def render_provider_selector() -> AIProvider | None:
 
     if toml_key:
         masked = toml_key[:8] + "..." + toml_key[-4:]
-        st.success(f"Key loaded from secrets.toml: `{masked}`")
+        st.success(f"Key loaded from secrets: `{masked}`")
         active_key = toml_key
     else:
         session_key = _manual_session_key(provider_choice)
         label = "Anthropic API Key" if provider_choice == "claude" else "OpenAI API Key"
         placeholder = "sk-ant-..." if provider_choice == "claude" else "sk-..."
-        st.caption("Add your API key")
         entered = st.text_input(
             label,
             value=st.session_state.get(session_key, ""),
@@ -206,13 +205,9 @@ def render_provider_selector() -> AIProvider | None:
         active_key = entered
 
         if not active_key:
-            st.info(
-                "**No API key found.**\n\n"
-                "Add your key to `.streamlit/secrets.toml`:\n"
-                "```toml\n[api_keys]\n"
-                + ("ANTHROPIC_API_KEY" if provider_choice == "claude" else "OPENAI_API_KEY")
-                + ' = "sk-..."\n```'
-            )
+            with st.expander("How to add a key via secrets.toml"):
+                env_key = "ANTHROPIC_API_KEY" if provider_choice == "claude" else "OPENAI_API_KEY"
+                st.code(f'[api_keys]\n{env_key} = "sk-..."', language="toml")
             return None
 
     ok, message = _is_key_compatible(provider_choice, active_key)

@@ -6,6 +6,7 @@ from __future__ import annotations
 
 import streamlit as st
 
+from models.resume_schema import EducationEntry, ExperienceEntry, ResumeData
 from components.resume_editor import render_resume_editor
 from components.resume_generator import (
     render_download_section,
@@ -33,9 +34,64 @@ FORM_STEPS = ["Mode", "Fill", "Preview"]
 SMART_STEPS = ["Mode", "AI Setup", "Import", "Parse", "Edit", "Tailor", "Preview"]
 
 AI_ACTION_OPTIONS = {
-    "skip": "Skip AI and go to preview",
-    "improve": "Improve resume with AI",
-    "tailor": "Tailor resume to a job",
+    "skip": "Skip — Preview",
+    "improve": "Improve with AI",
+    "tailor": "Tailor to Job",
+}
+
+# ── Demo resume data (Alex Carter — no AI usage) ──────────────────────────────
+_DEMO_DATA = {
+    "name": "Alex Carter",
+    "email": "alex.carter@example.com",
+    "phone": "+1 555 010 2020",
+    "location": "Bengaluru, India",
+    "linkedin": "linkedin.com/in/alex-carter",
+    "website": "alexcarter.dev",
+    "summary": (
+        "Software engineer with 6 years of experience building scalable web "
+        "applications and data pipelines. Strong background in Python, cloud "
+        "infrastructure, and cross-functional team collaboration."
+    ),
+    "skills": ["Python", "JavaScript", "React", "Node.js", "PostgreSQL", "AWS", "Docker", "CI/CD"],
+    "experience": [
+        {
+            "title": "Senior Software Engineer",
+            "company": "Nexus Technologies",
+            "location": "Bengaluru, India",
+            "start_date": "Mar 2021",
+            "end_date": "Present",
+            "bullets": [
+                "Led development of a real-time analytics dashboard serving 50,000+ daily active users",
+                "Reduced API response time by 35% through caching and database query optimization",
+                "Mentored a team of 4 junior engineers and conducted weekly code reviews",
+            ],
+        },
+        {
+            "title": "Software Engineer",
+            "company": "Brightwave Solutions",
+            "location": "Bengaluru, India",
+            "start_date": "Jun 2018",
+            "end_date": "Feb 2021",
+            "bullets": [
+                "Built and maintained RESTful APIs for e-commerce platform with 1M+ transactions/month",
+                "Automated deployment pipeline using GitHub Actions, cutting release time from 4 hours to 20 minutes",
+                "Integrated third-party payment gateways (Stripe, Razorpay) with 99.9% uptime",
+            ],
+        },
+    ],
+    "education": [
+        {
+            "institution": "PES University",
+            "degree": "B.E.",
+            "field_of_study": "Computer Science",
+            "start_date": "2014",
+            "end_date": "2018",
+            "gpa": "8.7 / 10",
+            "honors": "Distinction",
+        }
+    ],
+    "certifications": ["AWS Solutions Architect – Associate", "Google Professional Data Engineer"],
+    "languages": ["English", "Hindi", "Kannada"],
 }
 
 
@@ -69,7 +125,7 @@ def _inject_styles() -> None:
         }
 
         .block-container {
-          padding-top: 1.6rem;
+          padding-top: 4.5rem;
           padding-bottom: 3rem;
           max-width: 1120px;
         }
@@ -126,12 +182,13 @@ def _inject_styles() -> None:
 
         .sticky-step-wrap {
           position: sticky;
-          top: 0.4rem;
-          z-index: 40;
-          background: linear-gradient(180deg, rgba(246,249,255,0.98) 0%, rgba(246,249,255,0.95) 100%);
-          padding: 14px 0 12px;
-          margin-bottom: 1.1rem;
-          backdrop-filter: blur(8px);
+          top: 3.75rem;
+          z-index: 100;
+          background: rgba(246,249,255,0.98);
+          padding: 10px 0 10px;
+          margin: 0 0 1.4rem;
+          backdrop-filter: blur(10px);
+          box-shadow: 0 2px 10px rgba(13,22,40,0.07);
         }
 
         .step-bar {
@@ -230,15 +287,23 @@ def _inject_styles() -> None:
         }
 
         div[role="radiogroup"] label:has(input:checked) {
-          background: #EAF0FF !important;
+          background: var(--blue) !important;
           border-color: var(--blue) !important;
-          box-shadow: inset 0 0 0 1px var(--blue);
+          box-shadow: none !important;
         }
 
         div[role="radiogroup"] label p {
           color: var(--ink) !important;
           font-weight: 600 !important;
           margin: 0 !important;
+        }
+
+        div[role="radiogroup"] label:has(input:checked) p {
+          color: #FFFFFF !important;
+        }
+
+        div[role="radiogroup"] {
+          flex-wrap: nowrap !important;
         }
         </style>
         """,
@@ -256,8 +321,7 @@ def _init_session() -> None:
         "mode_selector": "form",
         "selected_mode_confirmed": False,
         "ai_setup_complete": False,
-        "selected_template": "modern",
-        "template_selector_choice": "modern",
+        "selected_template": "executive",
         "pdf_bytes": None,
         "pdf_filename": None,
         "pdf_signature": None,
@@ -270,6 +334,33 @@ def _init_session() -> None:
     for key, value in defaults.items():
         if key not in st.session_state:
             st.session_state[key] = value
+
+
+def _full_reset() -> None:
+    """Full clean reset — preserves email auth, clears everything else."""
+    keep = {
+        "email_gate_authenticated",
+        "email_gate_token",
+        "email_gate_masked_email",
+        "email_gate_authenticated_at",
+        "email_gate_usage",
+    }
+    for k in list(st.session_state.keys()):
+        if k not in keep:
+            del st.session_state[k]
+    st.session_state["step"] = 1
+    st.session_state["processing_mode"] = "form"
+
+
+def _load_demo_resume() -> None:
+    """Pre-fills demo resume data and jumps to Form Mode Preview (no AI usage)."""
+    _full_reset()
+    st.session_state["resume_data"] = ResumeData.from_dict(_DEMO_DATA)
+    st.session_state["selected_mode_confirmed"] = True
+    st.session_state["processing_mode"] = "form"
+    st.session_state["ai_setup_complete"] = True
+    st.session_state["selected_template"] = "executive"
+    st.session_state["step"] = 3
 
 
 def _render_header() -> None:
@@ -353,8 +444,7 @@ def _reset_flow_state(target_mode: str) -> None:
     st.session_state["pdf_bytes"] = None
     st.session_state["pdf_filename"] = None
     st.session_state["pdf_signature"] = None
-    st.session_state["selected_template"] = "modern"
-    st.session_state["template_selector_choice"] = "modern"
+    st.session_state["selected_template"] = "executive"
     st.session_state["ai_action_choice"] = "skip"
     st.session_state["committed_provider_choice"] = ""
     st.session_state["committed_provider_key"] = ""
@@ -415,20 +505,20 @@ def _render_nav(
 
 
 def _render_mode_selector(step_key: str) -> str:
-    selected = st.radio(
-        "Choose how to build your resume",
-        options=["form", "ai"],
-        format_func=lambda value: (
-            "Form Mode"
-            if value == "form"
-            else "Smart Mode"
-        ),
-        horizontal=True,
-        key=step_key,
-        label_visibility="collapsed",
-    )
-    st.caption("Form Mode: enter all resume details manually from scratch.")
-    st.caption("Smart Mode: import an existing resume and refine it with AI.")
+    col_left, col_right = st.columns([3, 1])
+    with col_left:
+        selected = st.radio(
+            "Choose how to build your resume",
+            options=["form", "ai"],
+            format_func=lambda value: "Form Mode — fill in manually" if value == "form" else "Smart Mode — import & refine with AI",
+            key=step_key,
+            label_visibility="collapsed",
+        )
+    with col_right:
+        st.markdown("<div style='height:6px'></div>", unsafe_allow_html=True)
+        if st.button("Try Demo CV", use_container_width=True, key="demo_resume_btn"):
+            _load_demo_resume()
+            st.rerun()
     return selected
 
 
@@ -449,14 +539,11 @@ def _render_form_mode(current_step: int) -> None:
     _render_step_bar("form", current_step)
 
     if current_step == 1:
-        _step_shell("Choose Mode", "Start by deciding whether you want the manual form flow or the AI-assisted flow.")
-        selected = _render_mode_selector("mode_selector")
-        _render_mode_continue_button("continue_mode_form", selected, "form")
-        _close_step_shell()
+        _render_mode_selector("mode_selector")
+        _render_mode_continue_button("continue_mode_form", st.session_state.get("mode_selector", "form"), "form")
         return
 
     if current_step == 2:
-        _step_shell("Fill", "Enter your details directly. No AI settings are shown in Form Mode.")
         result = render_resume_form()
         if result:
             allowed, message = check_limit("form_uses")
@@ -485,10 +572,14 @@ def _render_form_mode(current_step: int) -> None:
         st.rerun()
 
     if current_step == 3:
-        _step_shell("Preview", "Choose a template, review it, and download from the same section.")
         selected_template = render_template_selector(resume)
-        st.caption(f"Current template: {selected_template}")
+        st.divider()
         render_download_section(resume, selected_template)
+        left, _, _ = st.columns([1, 2, 1])
+        with left:
+            if st.button("Home", key="home_form_preview", use_container_width=True):
+                _full_reset()
+                st.rerun()
         _close_step_shell()
         return
 
@@ -496,20 +587,13 @@ def _render_form_mode(current_step: int) -> None:
 def _render_smart_mode(current_step: int) -> None:
     _render_step_bar("ai", current_step)
     if current_step == 1:
-        _step_shell("Choose Mode", "Start by deciding whether you want the manual form flow or the AI-assisted flow.")
-        selected = _render_mode_selector("mode_selector")
-        _render_mode_continue_button("continue_mode_ai", selected, "ai")
-        _close_step_shell()
+        _render_mode_selector("mode_selector")
+        _render_mode_continue_button("continue_mode_ai", st.session_state.get("mode_selector", "form"), "ai")
         return
 
     provider = render_provider_selector() if current_step == 2 else get_active_provider()
 
     if current_step == 2:
-        _step_shell("API Key", "")
-        if provider is not None:
-            st.success(f"Provider ready: {provider.name}")
-        elif has_provider_key():
-            st.info("API key detected. You can continue to import your resume.")
         can_continue = has_provider_key()
         _render_nav(
             "ai",
@@ -529,8 +613,6 @@ def _render_smart_mode(current_step: int) -> None:
         raw_text = render_resume_input()
         if raw_text:
             st.session_state["raw_text"] = raw_text
-        if st.session_state.get("raw_text"):
-            st.success("Resume content is ready for parsing.")
         _render_nav("ai", current_step, allow_next=bool(st.session_state.get("raw_text")))
         return
 
@@ -568,7 +650,6 @@ def _render_smart_mode(current_step: int) -> None:
         st.rerun()
 
     if current_step == 5:
-        _step_shell("Edit", "Make structured changes before running any AI rewrite or tailoring.")
         updated = render_resume_editor(resume)
         st.session_state["resume_data"] = updated
 
@@ -578,12 +659,14 @@ def _render_smart_mode(current_step: int) -> None:
                 for warning in warnings:
                     st.markdown(f"- {warning}")
 
+        st.markdown("<div style='margin-top:18px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.12em;color:#0055FF;margin-bottom:6px;'>Next step</div>", unsafe_allow_html=True)
         st.radio(
-            "Choose the next AI action",
+            "Next step",
             options=list(AI_ACTION_OPTIONS.keys()),
             format_func=lambda key: AI_ACTION_OPTIONS[key],
             horizontal=True,
             key="ai_action_choice",
+            label_visibility="collapsed",
         )
 
         next_label = "Preview" if st.session_state.get("ai_action_choice") == "skip" else "Next"
@@ -597,7 +680,6 @@ def _render_smart_mode(current_step: int) -> None:
             st.session_state["step"] = 7
             st.rerun()
 
-        _step_shell("Tailor", "Run the AI action you selected in the previous step.")
         render_usage_banner()
         if ai_action == "tailor":
             render_job_tailor(st.session_state["resume_data"], provider)
@@ -608,10 +690,14 @@ def _render_smart_mode(current_step: int) -> None:
         return
 
     if current_step == 7:
-        _step_shell("Preview", "Choose a template, review it, and download from the same section.")
         selected_template = render_template_selector(st.session_state["resume_data"])
-        st.caption(f"Current template: {selected_template}")
+        st.divider()
         render_download_section(st.session_state["resume_data"], selected_template)
+        left, _, _ = st.columns([1, 2, 1])
+        with left:
+            if st.button("Home", key="home_smart_preview", use_container_width=True):
+                _full_reset()
+                st.rerun()
         _close_step_shell()
         return
 

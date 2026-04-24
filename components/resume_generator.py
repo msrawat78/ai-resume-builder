@@ -58,44 +58,38 @@ def format_resume_as_text(resume: ResumeData) -> str:
 # Template Selector & HTML Preview
 # ─────────────────────────────────────────────────────────────────────────────
 
+def _on_template_change() -> None:
+    """Called when the template radio changes — invalidates the cached PDF."""
+    st.session_state["pdf_signature"] = None
+    st.session_state["pdf_bytes"] = None
+    st.session_state["pdf_filename"] = None
+
+
 def render_template_selector(resume: ResumeData) -> str:
-    """Renders template cards + live HTML preview. Returns selected template key."""
-    st.markdown("### Choose a Template")
-
-    if "selected_template" not in st.session_state:
-        st.session_state["selected_template"] = "modern"
-    if "template_selector_choice" not in st.session_state:
-        st.session_state["template_selector_choice"] = st.session_state["selected_template"]
-
+    """Renders template radio + live HTML preview. Returns selected template key."""
     template_keys = list(TEMPLATES.keys())
     if st.session_state.get("selected_template") not in template_keys:
         st.session_state["selected_template"] = template_keys[0]
-    if st.session_state.get("template_selector_choice") not in template_keys:
-        st.session_state["template_selector_choice"] = st.session_state["selected_template"]
 
     choice = st.radio(
-        "Resume template",
+        "Template",
         options=template_keys,
-        format_func=lambda key: TEMPLATES[key]["name"],
+        format_func=lambda k: f"{TEMPLATES[k]['emoji']}  {TEMPLATES[k]['name']}",
         horizontal=True,
-        key="template_selector_choice",
+        key="selected_template",
+        label_visibility="collapsed",
+        on_change=_on_template_change,
     )
-    if choice != st.session_state.get("selected_template"):
-        if st.button("Show Preview", type="primary", key="apply_template_preview"):
-            st.session_state["selected_template"] = choice
-            st.session_state["pdf_signature"] = None
-            st.rerun()
 
-    selected = st.session_state.get("selected_template", choice)
-    st.caption(TEMPLATES[selected]["description"])
-    st.markdown(f"#### Preview - {TEMPLATES[selected]['name']}")
+    st.caption(TEMPLATES[choice]["description"])
+
     if not resume.is_empty():
-        html_str = render_template(selected, resume)
-        components.html(f"<!-- preview:{selected} -->{html_str}", height=700, scrolling=True)
+        html_str = render_template(choice, resume)
+        components.html(f"<!-- preview:{choice} -->{html_str}", height=700, scrolling=True)
     else:
-        st.info("Parse your resume above to see a live template preview here.")
+        st.info("Your resume preview will appear here once data is entered.")
 
-    return selected
+    return choice
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -221,10 +215,8 @@ def render_resume_generator(resume: ResumeData, provider=None) -> ResumeData:
 
 def render_download_section(resume: ResumeData, selected_template: str = "modern"):
     """Renders the PDF download button."""
-    st.markdown("### Download Resume")
-
     if resume.is_empty():
-        st.info("Parse and edit your resume first, then download here.")
+        st.info("Complete your resume above to enable download.")
         return
 
     safe_name = resume.name.replace(" ", "_") if resume.name else "resume"
@@ -257,4 +249,4 @@ def render_download_section(resume: ResumeData, selected_template: str = "modern
             use_container_width=True,
         )
     else:
-        st.info("PDF will appear here as soon as the preview is ready.")
+        st.info("Generating PDF — this takes a few seconds the first time.")

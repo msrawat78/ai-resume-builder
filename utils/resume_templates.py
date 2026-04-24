@@ -246,24 +246,42 @@ def template_creative(resume: ResumeData) -> str:
         f"{_e(l)}</div>" for l in resume.languages
     )
 
+    def _cr_entry(date_str: str, title_html: str, sub_html: str, bullets_html: str, mb: str = "15pt") -> str:
+        """Timeline entry using a table left-cell as the accent bar — PDF-safe, no border-left."""
+        return (
+            f"<table style='width:100%;border-collapse:collapse;margin-bottom:{mb};page-break-inside:avoid;'>"
+            f"<tr>"
+            f"<td style='width:3pt;background:#6366f1;padding:0;vertical-align:top;'></td>"
+            f"<td style='padding-left:11pt;vertical-align:top;'>"
+            f"<div style='font-family:Helvetica Neue,Arial,sans-serif;font-size:8pt;color:#7c3aed;"
+            f"font-weight:bold;text-transform:uppercase;letter-spacing:0.9pt;margin-bottom:2pt;'>{date_str}</div>"
+            f"<div style='font-family:Georgia,serif;font-size:11pt;font-weight:bold;color:#1e1b4b;'>{title_html}</div>"
+            f"<div style='font-family:Helvetica Neue,Arial,sans-serif;font-size:9pt;color:#6b7280;margin:2pt 0 5pt;'>{sub_html}</div>"
+            f"{bullets_html}"
+            f"</td>"
+            f"</tr>"
+            f"</table>"
+        )
+
     exp_html = ""
     for exp in resume.experience:
-        exp_html += f"""
-<div style='border-left:3pt solid #6366f1;padding-left:11pt;margin-bottom:15pt;'>
-  <div style='font-family:Helvetica Neue,Arial,sans-serif;font-size:8pt;color:#7c3aed;font-weight:bold;text-transform:uppercase;letter-spacing:0.9pt;margin-bottom:2pt;'>{_e(_dr(exp.start_date,exp.end_date))}</div>
-  <div style='font-family:Georgia,serif;font-size:11pt;font-weight:bold;color:#1e1b4b;'>{_e(exp.title)}</div>
-  <div style='font-family:Helvetica Neue,Arial,sans-serif;font-size:9pt;color:#6b7280;margin:2pt 0 5pt;'>{_e(exp.company)}{(" &middot; "+_e(exp.location)) if exp.location else ""}</div>
-  {_ul(exp.bullets)}
-</div>"""
+        exp_html += _cr_entry(
+            _e(_dr(exp.start_date, exp.end_date)),
+            _e(exp.title),
+            _e(exp.company) + ((" &middot; " + _e(exp.location)) if exp.location else ""),
+            _ul(exp.bullets),
+        )
 
     edu_html = ""
     for edu in resume.education:
-        edu_html += f"""
-<div style='border-left:3pt solid #6366f1;padding-left:11pt;margin-bottom:14pt;'>
-  <div style='font-family:Helvetica Neue,Arial,sans-serif;font-size:8pt;color:#7c3aed;font-weight:bold;text-transform:uppercase;letter-spacing:0.9pt;margin-bottom:2pt;'>{_e(_dr(edu.start_date,edu.end_date))}</div>
-  <div style='font-family:Georgia,serif;font-size:11pt;font-weight:bold;color:#1e1b4b;'>{_e(edu.degree)}{(" &middot; "+_e(edu.field_of_study)) if edu.field_of_study else ""}</div>
-  <div style='font-family:Helvetica Neue,Arial,sans-serif;font-size:9pt;color:#6b7280;margin-top:2pt;'>{_e(edu.institution)}</div>
-</div>"""
+        deg = _e(edu.degree) + ((" &middot; " + _e(edu.field_of_study)) if edu.field_of_study else "")
+        edu_html += _cr_entry(
+            _e(_dr(edu.start_date, edu.end_date)),
+            deg,
+            _e(edu.institution),
+            "",
+            "14pt",
+        )
 
     highlight_sections = ""
     if cat_skills:
@@ -288,21 +306,8 @@ def template_creative(resume: ResumeData) -> str:
             f"</div>"
         )
 
-    exp_block = ""
-    if resume.experience:
-        exp_entries = exp_html.replace(
-            "<div style='border-left:3pt solid #6366f1;",
-            "<div class='entry' style='border-left:3pt solid #6366f1;",
-        )
-        exp_block = _sec("Experience", "#4f46e5", "#c4b5fd") + exp_entries
-
-    edu_block = ""
-    if resume.education:
-        edu_entries = edu_html.replace(
-            "<div style='border-left:3pt solid #6366f1;",
-            "<div class='entry' style='border-left:3pt solid #6366f1;",
-        )
-        edu_block = _sec("Education", "#4f46e5", "#c4b5fd") + edu_entries
+    exp_block = (_sec("Experience", "#4f46e5", "#c4b5fd") + exp_html) if resume.experience else ""
+    edu_block = (_sec("Education", "#4f46e5", "#c4b5fd") + edu_html) if resume.education else ""
 
     return f"""<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8">
 <style>
@@ -313,7 +318,6 @@ body {{ font-family: 'Helvetica Neue', Arial, sans-serif; background: #fff; font
 .content {{ padding: 18pt 18pt 10pt; }}
 .highlight-band {{ margin: 0 18pt 10pt; padding: 12pt 14pt 4pt; background:#f5f3ff; border:0.5pt solid #ddd6fe; }}
 .panel {{ margin-bottom: 12pt; page-break-inside: avoid; }}
-.entry {{ page-break-inside: avoid; }}
 ul {{ padding-left: 13pt; margin: 3pt 0 0; }}
 ul li {{ font-family: Helvetica Neue, Arial, sans-serif; font-size: 9.5pt; color: #4b5563; line-height: 1.6; margin-bottom: 2pt; }}
 </style></head><body>

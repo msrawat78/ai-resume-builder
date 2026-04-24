@@ -17,8 +17,7 @@ def render_resume_input() -> str | None:
     Renders the three-tab input panel and returns extracted raw text,
     or None if no valid input has been provided yet.
     """
-    st.markdown("### 📄 Import Your Resume")
-    st.caption(f"Use a resume with less than {MAX_RESUME_TEXT_CHARS:,} characters after extraction for best results.")
+    st.caption(f"Supports PDF and DOCX. Under {MAX_RESUME_TEXT_CHARS:,} characters for best results.")
 
     tab_upload, tab_paste, tab_linkedin = st.tabs([
         "📎 Upload File",
@@ -30,10 +29,6 @@ def render_resume_input() -> str | None:
 
     # ── Tab 1: File Upload ────────────────────────────────────────────────────
     with tab_upload:
-        st.markdown(
-            "Upload your resume as a **PDF** or **DOCX** file. "
-            "Text will be extracted automatically."
-        )
         uploaded = st.file_uploader(
             "Choose file",
             type=["pdf", "docx"],
@@ -58,8 +53,6 @@ def render_resume_input() -> str | None:
 
     # ── Tab 2: Paste Text ─────────────────────────────────────────────────────
     with tab_paste:
-        st.markdown("Paste your resume content below (plain text or copied from Word/Google Docs).")
-
         pasted = st.text_area(
             "Resume text",
             height=320,
@@ -84,24 +77,17 @@ def render_resume_input() -> str | None:
 
     # ── Tab 3: LinkedIn URL ───────────────────────────────────────────────────
     with tab_linkedin:
-        st.markdown(
-            "Enter your LinkedIn profile URL. "
-            "*(Full scraping requires browser auth — this demo uses a placeholder workflow.)*"
-        )
+        st.caption("Full scraping requires browser auth. Paste your resume text in the Paste Text tab for best results.")
         li_url = st.text_input(
             "LinkedIn URL",
-            placeholder="https://linkedin.com/in/your-name",
+            placeholder="https://linkedin.com/in/alex-carter",
             key="linkedin_url_input",
             label_visibility="collapsed",
         )
         if li_url:
             ok, msg = validate_linkedin_url(li_url)
             if ok:
-                st.info(
-                    "🔗 LinkedIn import noted. In a production deployment this would trigger "
-                    "an authenticated scrape or the LinkedIn API. For now, please also paste "
-                    "your resume text in the **Paste Text** tab."
-                )
+                st.info("URL noted. Use the Paste Text tab to add your resume content.")
             else:
                 st.warning(f"⚠️ {msg}")
 
